@@ -1,0 +1,6 @@
+venv
+preprocessed
+backup
+config.yml
+fastspeech2/vocoder/pretrained_models
+wave2lip/temp
