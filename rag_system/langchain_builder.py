@@ -42,7 +42,6 @@ class LangChainBuilder:
 
         return self.retriever
 
-    
     def self_question_answer_chain(self):
         qa_system_prompt = (
             "추가적인 정보가 필요하다면, 진단을 내리지말고 추가적인 질문을 하세요."
@@ -63,7 +62,6 @@ class LangChainBuilder:
 
         return question_answer_chain
 
-    
     def get_chain(self):
         history_aware_retriever = self.set_history_aware_retriever()
         question_answer_chain = self.self_question_answer_chain()
