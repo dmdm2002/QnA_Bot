@@ -7,8 +7,8 @@ import numpy as np
 import copy
 import math
 
-import utils.hparams as hp
-import utils.utils as utils
+import fastspeech2.utils.hparams as hp
+import fastspeech2.utils.utils as utils
 
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 

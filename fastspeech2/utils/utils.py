@@ -8,10 +8,8 @@ matplotlib.use("Agg")
 
 from matplotlib import pyplot as plt
 from scipy.io import wavfile
-from vocoder.vocgan_generator import Generator
-import utils.hparams as hp
-import os
-import text
+from fastspeech2.vocoder.vocgan_generator import Generator
+import fastspeech2.utils.hparams as hp
 
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
@@ -120,7 +118,7 @@ def get_vocgan(ckpt_path, n_mel_channels=hp.n_mel_channels, generator_ratio = [4
 
     return model
 
-def vocgan_infer(mel, vocoder, path):
+def vocgan_infer(mel, vocoder, path=None):
     model = vocoder
 
     with torch.no_grad():
@@ -132,8 +130,9 @@ def vocgan_infer(mel, vocoder, path):
         audio = audio.clamp(min=-hp.max_wav_value, max=hp.max_wav_value-1)
         audio = audio.short().cpu().detach().numpy()
 
-        wavfile.write(path, hp.sampling_rate, audio)
-
+        if path is not None:
+            wavfile.write(path, hp.sampling_rate, audio)
+    return audio
 
 def pad_1D(inputs, PAD=0):
 

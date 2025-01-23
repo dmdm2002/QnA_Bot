@@ -1,6 +1,7 @@
 import sys
 from PyQt5.QtWidgets import *
 from PyQt5 import uic
+from PyQt5.QtGui import QTextCursor
 from PyQt5.QtCore import Qt, QThread, pyqtSignal
 from datetime import datetime
 form_class = uic.loadUiType("pyqt_ui/template.ui")[0]
@@ -100,6 +101,14 @@ class MyWindow(QMainWindow, form_class):
         # Get the AI answer and update chat history
         answer, self.chat_history = chat_ai(self.chain, question, chat_history=self.chat_history)
 
+        # TTS 진행 상태 표시
+        self.tts_status_label.setText("음성 파일 생성 진행 중...")
+
+        # Run TTS in a separate thread
+        self.tts_worker = TTSWorker(answer)
+        self.tts_worker.finished.connect(self.on_tts_finished)
+        self.tts_worker.start()
+
         # Save the log with the AI's output
         self.chat_log.save_log("AI", answer)
 
@@ -107,14 +116,13 @@ class MyWindow(QMainWindow, form_class):
         chat_log_text = self.chat_log.load_log()
         self.chat_log_box.setText(chat_log_text)
 
-        # Run TTS in a separate thread
-        self.tts_worker = TTSWorker(answer)
-        self.tts_worker.finished.connect(self.on_tts_finished)
-        self.tts_worker.start()
+        # ** Scroll to the bottom of the chat_log_box after updating **
+        self.chat_log_box.moveCursor(QTextCursor.End)
+        self.chat_log_box.ensureCursorVisible()
 
     def on_tts_finished(self):
         """TTS 작업 완료 시 호출"""
-        print("TTS 작업 완료")
+        self.tts_status_label.setText("음성 파일 생성 완료!")
 
     def text_box_key_press(self, event):
         if event.key() == Qt.Key_Return and not event.modifiers() & Qt.ShiftModifier:

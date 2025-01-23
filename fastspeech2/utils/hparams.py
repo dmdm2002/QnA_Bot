@@ -51,11 +51,11 @@ variance_predictor_dropout = 0.5
 max_seq_len = 1000
 
 # Checkpoints and synthesis path
-preprocessed_path = os.path.join("./preprocessed/", dataset)
-checkpoint_path = os.path.join("./backup/ckpt/", dataset)
-eval_path = os.path.join("./backup/eval/", dataset)
-log_path = os.path.join("./backup/log/", dataset)
-test_path = "./backup/results"
+preprocessed_path = os.path.join("./fastspeech2/preprocessed/", dataset)
+checkpoint_path = os.path.join("./fastspeech2/backup/ckpt/", dataset)
+eval_path = os.path.join("./fastspeech2/backup/eval/", dataset)
+log_path = os.path.join("./fastspeech2/backup/log/", dataset)
+test_path = "./fastspeech2/backup/results"
 
 
 # Optimizer
@@ -73,7 +73,7 @@ weight_decay = 0.
 # Vocoder
 vocoder = 'vocgan'
 vocoder_pretrained_model_name = "vocgan_kss_pretrained_model_epoch_4500.pt"
-vocoder_pretrained_model_path = os.path.join("./vocoder/pretrained_models/", vocoder_pretrained_model_name)
+vocoder_pretrained_model_path = os.path.join("./fastspeech2/vocoder/pretrained_models/", vocoder_pretrained_model_name)
 
 # Log-scaled duration
 log_offset = 1.

@@ -1,35 +1,32 @@
 import torch
 import torch.nn as nn
 import numpy as np
-import utils.hparams as hp
+import fastspeech2.utils.hparams as hp
 import os
-import argparse
 import re
-from string import punctuation
 
-from fastspeech2 import FastSpeech2
-from vocoder import vocgan_generator
+from fastspeech2.fastspeech2 import FastSpeech2
+from fastspeech2.text import text_to_sequence, sequence_to_text
+import fastspeech2.utils.utils as utils
 
-from text import text_to_sequence, sequence_to_text
-import utils
-import audio as Audio
-
-import codecs
 from g2pk import G2p
 from jamo import h2j
+
+from kss import split_sentences
+import sounddevice as sd
 
 
 def kor_preprocess(text):
     g2p=G2p()
     phone = g2p(text)
-    print('after g2p: ',phone)
+    # print('after g2p: ',phone)
     phone = h2j(phone)
-    print('after h2j: ',phone)
+    # print('after h2j: ',phone)
     phone = list(filter(lambda p: p != ' ', phone))
     phone = '{' + '}{'.join(phone) + '}'
-    print('phone: ',phone)
+    # print('phone: ',phone)
     phone = re.sub(r'\{[^\w\s]?\}', '{sil}', phone)
-    print('after re.sub: ',phone)
+    # print('after re.sub: ',phone)
     phone = phone.replace('}{', ' ')
 
     print('|' + phone + '|')
@@ -37,10 +34,9 @@ def kor_preprocess(text):
     sequence = np.stack([sequence])
     return torch.from_numpy(sequence).long().to(hp.device)
 
-
 def get_FastSpeech2(num):
     checkpoint_path = os.path.join(hp.checkpoint_path, "checkpoint_{}.pth.tar".format(num))
-    model = nn.DataParallel(FastSpeech2())
+    model = FastSpeech2()
     model.load_state_dict(torch.load(checkpoint_path)['model'])
     model.requires_grad = False
     model.eval()
@@ -49,9 +45,10 @@ def get_FastSpeech2(num):
 
 
 def synthesize(model, vocoder, text, sentence, dur_pitch_energy_aug, prefix=''):
-    sentence = sentence[:10]  # long filename will result in OS Error
+    sentence = sentence[:10]
 
-    mean_mel, std_mel = torch.tensor(np.load(os.path.join(hp.preprocessed_path, "mel_stat.npy")), dtype=torch.float).to(hp.device)
+    mean_mel, std_mel = torch.tensor(np.load(os.path.join(hp.preprocessed_path, "mel_stat.npy")), dtype=torch.float).to(
+        hp.device)
     mean_f0, std_f0 = f0_stat = torch.tensor(np.load(os.path.join(hp.preprocessed_path, "f0_stat.npy")),
                                              dtype=torch.float).to(hp.device)
     mean_energy, std_energy = energy_stat = torch.tensor(np.load(os.path.join(hp.preprocessed_path, "energy_stat.npy")),
@@ -83,9 +80,43 @@ def synthesize(model, vocoder, text, sentence, dur_pitch_energy_aug, prefix=''):
 
     if vocoder is not None:
         if hp.vocoder.lower() == "vocgan":
-            utils.vocgan_infer(mel_postnet_torch, vocoder,
-                               path=os.path.join(hp.test_path, '{}_{}_{}.wav'.format(prefix, hp.vocoder, sentence)))
+           audio = utils.vocgan_infer(mel_postnet_torch, vocoder)
 
-    utils.plot_data([(mel_postnet_torch[0].detach().cpu().numpy(), f0_output, energy_output)],
-                    ['Synthesized Spectrogram'],
-                    filename=os.path.join(hp.test_path, '{}_{}.png'.format(prefix, sentence)))
+    # utils.plot_data([(mel_postnet_torch[0].detach().cpu().numpy(), f0_output, energy_output)],
+    #                 ['Synthesized Spectrogram'],
+    #                 filename=os.path.join(hp.test_path, '{}_{}.png'.format(prefix, sentence)))
+
+    return mel_postnet_torch, audio
+
+def inference(answer):
+    dur_pitch_energy_aug = [1.0, 1.0, 1.0]
+
+    answer_list = answer.split('\n')
+
+    sentences = []
+    for split_answer in answer_list:
+        split_answer = split_sentences(split_answer)
+        sentences += split_answer
+
+    model = get_FastSpeech2(num=290000).to(hp.device)
+    if hp.vocoder == 'vocgan':
+        vocoder = utils.get_vocgan(ckpt_path=hp.vocoder_pretrained_model_path)
+    else:
+        vocoder = None
+        print('vocoder가 존재하지 않습니다.')
+
+    # text to audio
+    combined_audio = []
+    for sentence in sentences:
+        text = kor_preprocess(sentence)
+        mel_postnet_torch, audio = synthesize(model, vocoder, text, sentence, dur_pitch_energy_aug)
+        combined_audio.append(audio)
+
+    # Combine all audio arrays
+    combined_audio = np.concatenate(combined_audio, axis=0)
+
+    # Normalize the combined audio for playback
+    combined_audio = combined_audio / np.max(np.abs(combined_audio))
+
+    sd.play(combined_audio, samplerate=hp.sampling_rate)
+    sd.wait()

@@ -2,11 +2,11 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
-from transformer.Models import Encoder, Decoder
-from transformer.Layers import PostNet
-from modules import VarianceAdaptor
-from utils.utils import get_mask_from_lengths
-import utils.hparams as hp
+from fastspeech2.transformer.Models import Encoder, Decoder
+from fastspeech2.transformer.Layers import PostNet
+from fastspeech2.modules import VarianceAdaptor
+from fastspeech2.utils.utils import get_mask_from_lengths
+import fastspeech2.utils.hparams as hp
 
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 

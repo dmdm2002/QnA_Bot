@@ -2,10 +2,10 @@ import torch
 import torch.nn as nn
 import numpy as np
 
-import transformer.Constants as Constants
-from transformer.Layers import FFTBlock
-from text.symbols import symbols
-import utils.hparams as hp
+import fastspeech2.transformer.Constants as Constants
+from fastspeech2.transformer.Layers import FFTBlock
+from fastspeech2.text.symbols import symbols
+import fastspeech2.utils.hparams as hp
 
 def get_sinusoid_encoding_table(n_position, d_hid, padding_idx=None):
     ''' Sinusoid position encoding table '''

@@ -1,12 +1,9 @@
 from os import listdir, path
 
 import numpy as np
-import scipy, cv2, os, sys, argparse
-import os.path as osp
-
-import json, subprocess, random, string
+import cv2, os, argparse
+import subprocess
 from tqdm import tqdm
-from glob import glob
 import librosa
 
 import torch
@@ -166,7 +163,7 @@ if __name__ == '__main__':
 
     parser.add_argument('--audio', type=str,
                         help='Filepath of video/audio file to use as raw audio source',
-                        default='D:/Side/SieProject/StyleTTS/dataset/kss/1/1_0000.wav', required=False)
+                        default='D:/Side/SieProject/TTS/dataset/kss/wavs/1_0000.wav', required=False)
 
     parser.add_argument('--outfile', type=str, help='Video path to save result. See default for an e.g.',
                         default='D:/Side/SieProject/Wave2Lip/result_voice.mp4', required=False)
@@ -250,10 +247,10 @@ if __name__ == '__main__':
         print("Extracting raw audio...")
         print(args.audio)
         print(librosa.__version__)
-        command = 'ffmpeg -y -i {} -strict -2 {}'.format(args.audio, 'D:/Side/SieProject/StyleTTS/dataset/kss/1/1_0000.wav')
+        command = 'ffmpeg -y -i {} -strict -2 {}'.format(args.audio, 'D:/Side/SieProject/TTS/dataset/kss/wavs/1_0000.wav')
 
         subprocess.call(command, shell=True)
-        args.audio = 'D:/Side/SieProject/StyleTTS/dataset/kss/1/1_0000.wav'
+        args.audio = 'D:/Side/SieProject/TTS/dataset/kss/wavs/1_0000.wav'
 
     wav = audio.load_wav(args.audio, 16000)
     mel = audio.melspectrogram(wav)
@@ -286,7 +283,7 @@ if __name__ == '__main__':
             print("Model loaded")
 
             frame_h, frame_w = full_frames[0].shape[:-1]
-            out = cv2.VideoWriter('wave2lip/temp/result.avi',
+            out = cv2.VideoWriter('./wave2lip/temp/result.avi',
                                   cv2.VideoWriter_fourcc(*'DIVX'), fps, (frame_w, frame_h))
 
         img_batch = torch.FloatTensor(np.transpose(img_batch, (0, 3, 1, 2))).to(args.device)
@@ -310,5 +307,5 @@ if __name__ == '__main__':
     # subprocess.call(command, shell=False)
 
     os.system(
-        f'ffmpeg -i {args.audio} -i wave2lip/temp/result.avi -c copy D:/Side/SieProject/Wave2Lip/temp/temp.avi'
+        f'ffmpeg -i {args.audio} -i ./wave2lip/temp/result.avi -c copy D:/Side/SieProject/Wave2Lip/temp/temp.avi'
     )

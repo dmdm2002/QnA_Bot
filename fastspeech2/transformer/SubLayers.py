@@ -2,8 +2,8 @@ import torch.nn as nn
 import torch.nn.functional as F
 import numpy as np
 
-from transformer.Modules import ScaledDotProductAttention
-import utils.hparams as hp
+from fastspeech2.transformer.Modules import ScaledDotProductAttention
+import fastspeech2.utils.hparams as hp
 
 
 class MultiHeadAttention(nn.Module):
